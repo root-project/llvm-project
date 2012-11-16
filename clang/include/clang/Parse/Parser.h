@@ -51,6 +51,7 @@ struct OMPTraitProperty;
 struct OMPTraitSelector;
 struct OMPTraitSet;
 class OMPTraitInfo;
+class DestroyTemplateIdAnnotationsRAIIObj;
 
 enum class AnnotatedNameKind {
   /// Annotation has failed and emitted an error.
@@ -197,6 +198,7 @@ public:
   friend class PoisonSEHIdentifiersRAIIObject;
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
+  friend class DestroyTemplateIdAnnotationsRAIIObj;
 
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser() override;
@@ -208,6 +210,28 @@ public:
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
   const Token &getCurToken() const { return Tok; }
+
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class ParserCurTokRestoreRAII {
+  private:
+    Parser &P;
+    Token SavedTok;
+
+  public:
+    ParserCurTokRestoreRAII(Parser &P) : P(P), SavedTok(P.Tok) {}
+
+    void pop() {
+      if (SavedTok.is(tok::unknown))
+        return;
+
+      P.Tok = SavedTok;
+
+      SavedTok.startToken();
+    }
+
+    ~ParserCurTokRestoreRAII() { pop(); }
+  };
+
   Scope *getCurScope() const { return Actions.getCurScope(); }
 
   void incrementMSManglingNumber() const {
