@@ -1687,6 +1687,74 @@ public:
                      IsReinject);
   }
 
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class CleanupAndRestoreCacheRAII {
+  private:
+    Preprocessor &PP;
+    CachedTokensTy::size_type SavedCachedLexPos;
+    CachedTokensTy SavedCachedTokens;
+    std::vector<IncludeStackInfo> SavedStack;
+    Lexer *SavedCurLexer;
+    PreprocessorLexer *SavedCurPPLexer;
+    TokenLexer* SavedCurTokenLexer;
+    ConstSearchDirIterator SavedCurDirLookup;
+    enum CurLexerKind SavedCurLexerKind;
+    unsigned SavedLexLevel;
+
+  public:
+    CleanupAndRestoreCacheRAII(Preprocessor &PP)
+      : PP(PP), SavedCachedLexPos(PP.CachedLexPos),
+        SavedCachedTokens(PP.CachedTokens),
+        SavedStack(std::move(PP.IncludeMacroStack)),
+        SavedCurLexer(PP.CurLexer.release()),
+        SavedCurPPLexer(PP.CurPPLexer),
+        SavedCurTokenLexer(PP.CurTokenLexer.release()),
+        SavedCurDirLookup(PP.CurDirLookup),
+        SavedCurLexerKind(PP.CurLexerKind),
+        SavedLexLevel(PP.LexLevel)
+    {
+      PP.CachedLexPos = 0;
+      PP.CachedTokens.clear();
+      PP.IncludeMacroStack.clear();
+      PP.CurLexer.reset(0);
+      PP.CurPPLexer = 0;
+      PP.CurTokenLexer.reset(0);
+      PP.CurDirLookup = 0;
+      PP.CurLexerKind = CLK_CachingLexer;
+      PP.LexLevel = 0;
+    }
+
+    void pop() {
+      if (SavedCurLexerKind == (enum CurLexerKind)~0U)
+        return;
+
+      //ExitCachingLexMode();
+      PP.CachedLexPos = SavedCachedLexPos;
+      PP.CachedTokens = SavedCachedTokens;
+      PP.IncludeMacroStack = std::move(SavedStack);
+      PP.CurLexer.reset(SavedCurLexer);
+      PP.CurPPLexer = SavedCurPPLexer;
+      PP.CurTokenLexer.reset(SavedCurTokenLexer);
+      PP.CurDirLookup = SavedCurDirLookup;
+      PP.CurLexerKind = SavedCurLexerKind;
+      PP.LexLevel = SavedLexLevel;
+
+      SavedCachedLexPos = 0;
+      SavedCachedTokens.clear();
+      SavedStack.clear();
+      SavedCurLexer = 0;
+      SavedCurPPLexer = 0;
+      SavedCurTokenLexer = 0;
+      SavedCurDirLookup = 0;
+      SavedCurLexerKind = (enum CurLexerKind)~0U;
+      SavedLexLevel = ~0U;
+    }
+
+    ~CleanupAndRestoreCacheRAII() {
+      pop();
+    }
+  };
+
   /// Pop the current lexer/macro exp off the top of the lexer stack.
   ///
   /// This should only be used in situations where the current state of the
