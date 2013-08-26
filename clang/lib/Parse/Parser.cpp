@@ -50,15 +50,18 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
   return Ident__except;
 }
 
-Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
+Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies,
+               bool isTemporary /*=false*/)
     : PP(pp), PreferredType(pp.isCodeCompletionEnabled()), Actions(actions),
       Diags(PP.getDiagnostics()), GreaterThanIsOperator(true),
       ColonIsSacred(false), InMessageExpression(false),
-      TemplateParameterDepth(0), ParsingInObjCContainer(false) {
+      TemplateParameterDepth(0), ParsingInObjCContainer(false),
+      IsTemporary(isTemporary) {
   SkipFunctionBodies = pp.isCodeCompletionEnabled() || skipFunctionBodies;
   Tok.startToken();
   Tok.setKind(tok::eof);
-  Actions.CurScope = nullptr;
+  if (!IsTemporary)
+    Actions.CurScope = nullptr;
   NumCachedScopes = 0;
   CurParsedObjCImpl = nullptr;
 
@@ -67,14 +70,17 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   initializePragmaHandlers();
 
   CommentSemaHandler.reset(new ActionCommentHandler(actions));
-  PP.addCommentHandler(CommentSemaHandler.get());
+  if (!IsTemporary)
+    PP.addCommentHandler(CommentSemaHandler.get());
 
-  PP.setCodeCompletionHandler(*this);
-
-  Actions.ParseTypeFromStringCallback =
-      [this](StringRef TypeStr, StringRef Context, SourceLocation IncludeLoc) {
-        return this->ParseTypeFromString(TypeStr, Context, IncludeLoc);
-      };
+  if (!IsTemporary) {
+    PP.setCodeCompletionHandler(*this);
+    Actions.ParseTypeFromStringCallback = [this](StringRef TypeStr,
+                                                 StringRef Context,
+                                                 SourceLocation IncludeLoc) {
+      return this->ParseTypeFromString(TypeStr, Context, IncludeLoc);
+    };
+  }
 }
 
 DiagnosticBuilder Parser::Diag(SourceLocation Loc, unsigned DiagID) {
@@ -468,8 +474,10 @@ Parser::ParseScopeFlags::~ParseScopeFlags() {
 
 Parser::~Parser() {
   // If we still have scopes active, delete the scope tree.
-  delete getCurScope();
-  Actions.CurScope = nullptr;
+  if (!IsTemporary) {
+    delete getCurScope();
+    Actions.CurScope = nullptr;
+  }
 
   // Free the scope cache.
   for (unsigned i = 0, e = NumCachedScopes; i != e; ++i)
