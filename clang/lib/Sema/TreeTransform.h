@@ -41,6 +41,8 @@
 #include "llvm/Support/ErrorHandling.h"
 #include <algorithm>
 
+#include "HackForDefaultTemplateArg.h"
+
 using namespace llvm::omp;
 
 namespace clang {
@@ -6324,7 +6326,7 @@ QualType TreeTransform<Derived>::TransformSubstTemplateTypeParmType(
   Replacement = SemaRef.Context.getCanonicalType(Replacement);
   QualType Result
     = SemaRef.Context.getSubstTemplateTypeParmType(T->getReplacedParameter(),
-                                                   Replacement);
+                                                   Replacement,false);
 
   // Propagate type-source information.
   SubstTemplateTypeParmTypeLoc NewTL
