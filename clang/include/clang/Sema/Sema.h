@@ -1044,6 +1044,32 @@ public:
            isConstantEvaluatedOverride;
   }
 
+  /// A RAII object to temporarily push a decl context and scope.
+  class ContextAndScopeRAII {
+  private:
+    Sema &S;
+    ContextRAII SavedContext;
+    Scope *SavedScope;
+
+  public:
+    ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
+      : S(S), SavedContext(S, ContextToPush), SavedScope(S.CurScope)
+    {
+      S.CurScope = ScopeToPush;
+    }
+
+    void pop() {
+      SavedContext.pop();
+      if (!SavedScope) return;
+      S.CurScope = SavedScope;
+      SavedScope = nullptr;
+    }
+
+    ~ContextAndScopeRAII() {
+      pop();
+    }
+  };
+
   /// RAII object to handle the state changes required to synthesize
   /// a function body.
   class SynthesizedFunctionScope {
