@@ -2973,6 +2973,14 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
       Invalid = true;
     }
 
+    if (RedundantDefaultArg &&
+        (((*OldParam)->hasAttr<AnnotateAttr>() &&
+         (*OldParam)->getAttr<AnnotateAttr>()->getAnnotation() == "rootmap") ||
+        ((*NewParam)->hasAttr<AnnotateAttr>() &&
+         (*NewParam)->getAttr<AnnotateAttr>()->getAnnotation() == "rootmap"))) {
+      RedundantDefaultArg = false;
+    }
+
     // [basic.def.odr]/13:
     //     There can be more than one definition of a
     //     ...
