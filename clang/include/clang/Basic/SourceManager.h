@@ -251,7 +251,7 @@ public:
 
   /// Set the buffer.
   void setBuffer(std::unique_ptr<llvm::MemoryBuffer> B) {
-    IsBufferInvalid = false;
+    IsBufferInvalid = !B;
     Buffer = std::move(B);
   }
 
@@ -808,6 +808,8 @@ public:
   ~SourceManager();
 
   void clearIDTables();
+
+  void invalidateCache(FileID FID);
 
   /// Initialize this source manager suitably to replay the compilation
   /// described by \p Old. Requires that \p Old outlive \p *this.
