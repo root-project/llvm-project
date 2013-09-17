@@ -32,6 +32,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <set>
 
 namespace llvm {
 
@@ -104,6 +105,11 @@ class FileManager : public RefCountedBase<FileManager> {
 
   /// The canonical names of files and directories .
   llvm::DenseMap<const void *, llvm::StringRef> CanonicalNames;
+
+  std::set<const FileEntry*> FileEntriesToReread;
+
+  /// The canonical names of directories.
+  llvm::DenseMap<const DirectoryEntry *, llvm::StringRef> CanonicalDirNames;
 
   /// Storage for canonical names that we have computed.
   llvm::BumpPtrAllocator CanonicalNameStorage;
