@@ -14134,6 +14134,33 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
 
   switch (Opc) {
   case BO_Assign:
+    // ROOT hack: we want to support constructs like n = new TNamed() and if n
+    // wasn't declared we should declare it.
+    if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(LHSExpr)) {
+      if (VarDecl* VD = dyn_cast<VarDecl>(DRE->getDecl()))
+        if (const AutoType* aTy = dyn_cast<AutoType>(VD->getType().getTypePtr()))
+          if (const AnnotateAttr* A = VD->getAttr<AnnotateAttr>())
+            // If the deduction didn't take place and it is our special 
+            // annotation
+            if (!aTy->isDeduced() && A->getAnnotation().equals("__Auto")) {
+            QualType ResTy;
+            ASTContext& C = getASTContext();
+            TypeSourceInfo* TrivialTSI
+              = C.getTrivialTypeSourceInfo(VD->getType());
+            DeduceAutoType(TrivialTSI, RHSExpr, ResTy);
+            VD->setTypeSourceInfo(C.getTrivialTypeSourceInfo(ResTy));
+            VD->setType(ResTy);
+            VD->setInit(RHSExpr);
+            PushOnScopeChains(VD, getCurScope(), /*Add to ctx*/true);
+
+
+            // Here we need to return 'something' to make the parser happy. 
+            // A reference to the decl is semantically closest to what we want.
+            return BuildDeclRefExpr(VD, VD->getType(), VK_LValue, 
+                                    SourceLocation());
+          }
+    }
+
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType());
     if (getLangOpts().CPlusPlus &&
         LHS.get()->getObjectKind() != OK_ObjCProperty) {
