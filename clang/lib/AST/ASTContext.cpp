@@ -4598,8 +4598,10 @@ QualType ASTContext::getAttributedType(attr::Kind attrKind,
 QualType
 ASTContext::getSubstTemplateTypeParmType(const TemplateTypeParmType *Parm,
                                          QualType Replacement) const {
+#if 0
   assert(Replacement.isCanonical()
          && "replacement types must always be canonical");
+#endif
 
   llvm::FoldingSetNodeID ID;
   SubstTemplateTypeParmType::Profile(ID, Parm, Replacement);
@@ -4609,7 +4611,8 @@ ASTContext::getSubstTemplateTypeParmType(const TemplateTypeParmType *Parm,
 
   if (!SubstParm) {
     SubstParm = new (*this, TypeAlignment)
-      SubstTemplateTypeParmType(Parm, Replacement);
+      SubstTemplateTypeParmType(Parm, Replacement,
+                                Replacement.getCanonicalType());
     Types.push_back(SubstParm);
     SubstTemplateTypeParmTypes.InsertNode(SubstParm, InsertPos);
   }
