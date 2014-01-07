@@ -351,6 +351,8 @@ FileManager::getFileRef(StringRef Filename, bool openFile, bool CacheFailure) {
     // also depend on this logic and they have `use-external-paths: false`.
     if (&DirInfo.getDirEntry() != UFE->Dir && Status.IsVFSMapped)
       UFE->Dir = &DirInfo.getDirEntry();
+  }
+  if (llvm::sys::toTimeT(Status.getLastModificationTime()) == UFE->ModTime) {
 
     // Always update LastRef to the last name by which a file was accessed.
     // FIXME: Neither this nor always using the first reference is correct; we
