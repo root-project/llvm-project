@@ -320,6 +320,9 @@ FileManager::getFileRef(StringRef Filename, bool openFile, bool CacheFailure) {
     // multiple names.
     if (&DirInfo.getDirEntry() != UFE.Dir && Status.IsVFSMapped)
       UFE.Dir = &DirInfo.getDirEntry();
+  }
+  if (UFE.isValid() &&
+      llvm::sys::toTimeT(Status.getLastModificationTime()) == UFE.ModTime) {
 
     // Always update LastRef to the last name by which a file was accessed.
     // FIXME: Neither this nor always using the first reference is correct; we
