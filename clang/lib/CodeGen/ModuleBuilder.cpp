@@ -29,7 +29,7 @@
 using namespace clang;
 using namespace CodeGen;
 
-namespace {
+namespace clang {
   class CodeGeneratorImpl : public CodeGenerator {
     DiagnosticsEngine &Diags;
     ASTContext *Ctx;
