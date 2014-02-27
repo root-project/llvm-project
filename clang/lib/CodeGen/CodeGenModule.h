@@ -57,6 +57,7 @@ class FileSystem;
 namespace clang {
 class ASTContext;
 class AtomicType;
+class CodeGeneratorImpl; // hack needed by cling
 class FunctionDecl;
 class IdentifierInfo;
 class ObjCImplementationDecl;
@@ -1743,6 +1744,7 @@ private:
 
   llvm::Metadata *CreateMetadataIdentifierImpl(QualType T, MetadataTypeMap &Map,
                                                StringRef Suffix);
+  friend class clang::CodeGeneratorImpl; // hack needed by cling
 };
 
 }  // end namespace CodeGen
