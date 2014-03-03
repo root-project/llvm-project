@@ -469,9 +469,11 @@ Parser::~Parser() {
 
   resetPragmaHandlers();
 
-  PP.removeCommentHandler(CommentSemaHandler.get());
+  if (!IsTemporary)
+    PP.removeCommentHandler(CommentSemaHandler.get());
 
-  PP.clearCodeCompletionHandler();
+  if (!IsTemporary)
+    PP.clearCodeCompletionHandler();
 
   DestroyTemplateIds();
 }
