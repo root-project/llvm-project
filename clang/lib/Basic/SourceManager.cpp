@@ -358,12 +358,23 @@ bool SourceManager::isMainFile(const FileEntry &SourceFile) {
   return false;
 }
 
-void SourceManager::invalidateCache(const FileEntry* Entry) {
+void SourceManager::invalidateCache(FileID FID) {
+  const FileEntry* Entry = getFileEntryForID(FID);
+  if (!Entry)
+    return;
   if (ContentCache *&E = FileInfos[Entry]) {
-    E->replaceBuffer(0, /*free*/ true);
+    E->setBuffer(nullptr);
     E = 0;
   }
-  getFileManager().invalidateCache(Entry);
+  if (!FID.isInvalid()) {
+    const SrcMgr::SLocEntry& SLocE = getSLocEntry(FID);
+    if (SLocE.isFile()) {
+      SrcMgr::ContentCache& CC =
+        const_cast<SrcMgr::ContentCache&>(SLocE.getFile().getContentCache());
+      CC.setBuffer(nullptr);
+    }
+  }
+  getFileManager().invalidateCache(const_cast<FileEntry*>(Entry));
 }
 
 void SourceManager::initializeForReplay(const SourceManager &Old) {

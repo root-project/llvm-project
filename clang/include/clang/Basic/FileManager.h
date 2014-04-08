@@ -299,6 +299,9 @@ public:
   std::error_code getNoncachedStatValue(StringRef Path,
                                         llvm::vfs::Status &Result);
 
+  /// Remove the real file \p Entry from the cache.
+  void invalidateCache(FileEntry *Entry);
+
   /// If path is not absolute and FileSystemOptions set the working
   /// directory, the path is modified to be relative to the given
   /// working directory.
