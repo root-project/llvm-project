@@ -948,7 +948,7 @@ OptionalFileEntryRef Preprocessor::LookupFile(
   SmallVector<std::pair<const FileEntry *, const DirectoryEntry *>, 16>
       Includers;
   bool BuildSystemModule = false;
-  if (!FromDir && !FromFile) {
+  if (!FromDir && !FromFile && getCurrentFileLexer()) {
     FileID FID = getCurrentFileLexer()->getFileID();
     const FileEntry *FileEnt = SourceMgr.getFileEntryForID(FID);
 
