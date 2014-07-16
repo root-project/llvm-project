@@ -331,9 +331,14 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
       return nullptr;
     }
 
-    if (!LookupCtx->isDependentContext() &&
-        RequireCompleteDeclContext(*SS, LookupCtx))
-      return nullptr;
+    if (!LookupCtx->isDependentContext()) {
+      if (RequireCompleteDeclContext(*SS, LookupCtx)) {
+        return nullptr;
+      } else if (TagDecl* TD = dyn_cast<TagDecl>(LookupCtx)) {
+        // Update the DeclContext to point to the Tag definition.
+        LookupCtx = TD->getDefinition();
+      }
+    }
   }
 
   // FIXME: LookupNestedNameSpecifierName isn't the right kind of
