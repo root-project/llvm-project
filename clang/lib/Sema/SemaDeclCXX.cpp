@@ -12886,7 +12886,7 @@ bool Sema::CheckUsingDeclQualifier(SourceLocation UsingLoc, bool HasTypename,
     if (Cxx20Enumerator)
       return false; // OK
 
-    auto *RD = NamedContext
+    DeclContext *RD = NamedContext
                    ? cast<CXXRecordDecl>(NamedContext->getRedeclContext())
                    : nullptr;
     if (RD && !RequireCompleteDeclContext(const_cast<CXXScopeSpec &>(SS), RD)) {
