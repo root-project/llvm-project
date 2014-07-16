@@ -96,7 +96,8 @@ ParsedType Sema::getConstructorName(IdentifierInfo &II,
     return ParsedType::make(T);
   }
 
-  if (SS.isNotEmpty() && RequireCompleteDeclContext(SS, CurClass))
+  DeclContext *DC = CurClass;
+  if (SS.isNotEmpty() && RequireCompleteDeclContext(SS, DC))
     return ParsedType();
 
   // Find the injected-class-name declaration. Note that we make no attempt to
