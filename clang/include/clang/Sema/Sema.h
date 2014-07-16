@@ -2732,7 +2732,7 @@ public:
 
 public:
   // Marks SS invalid if it represents an incomplete type.
-  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *DC);
+  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *&DC);
   // Complete an enum decl, maybe without a scope spec.
   bool RequireCompleteEnumDecl(EnumDecl *D, SourceLocation L,
                                CXXScopeSpec *SS = nullptr);

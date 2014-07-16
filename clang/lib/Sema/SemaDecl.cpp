@@ -352,9 +352,14 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
       return nullptr;
     }
 
-    if (!LookupCtx->isDependentContext() &&
-        RequireCompleteDeclContext(*SS, LookupCtx))
-      return nullptr;
+    if (!LookupCtx->isDependentContext()) {
+      if (RequireCompleteDeclContext(*SS, LookupCtx)) {
+        return nullptr;
+      } else if (TagDecl* TD = dyn_cast<TagDecl>(LookupCtx)) {
+        // Update the DeclContext to point to the Tag definition.
+        LookupCtx = TD->getDefinition();
+      }
+    }
   }
 
   // In the case where we know that the identifier is a class name, we know that
