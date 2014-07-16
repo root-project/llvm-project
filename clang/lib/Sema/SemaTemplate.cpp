@@ -430,6 +430,11 @@ bool Sema::LookupTemplateName(LookupResult &Found,
     // The declaration context must be complete.
     if (LookupCtx && RequireCompleteDeclContext(SS, LookupCtx))
       return true;
+
+    if (TagDecl* TD = dyn_cast_or_null<TagDecl>(LookupCtx)) {
+      // Update the DeclContext to point to the Tag definition.
+      LookupCtx = TD->getDefinition();
+    }
   }
 
   bool ObjectTypeSearchedInScope = false;
