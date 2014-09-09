@@ -552,6 +552,8 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
         }
       }
 
+      (void)DiagDefaultParamID;
+#if 0 // Disable until Diag is rewired
       // FIXME: If we knew where the '=' was, we could easily provide a fix-it
       // hint here. Alternatively, we could walk the type-source information
       // for NewParam to find the last source location in the type... but it
@@ -573,6 +575,7 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
 
       Diag(OldParam->getLocation(), diag::note_previous_definition)
         << OldParam->getDefaultArgRange();
+#endif
     } else if (OldParamHasDfl) {
       // Merge the old default argument into the new parameter unless the new
       // function is a friend declaration in a template class. In the latter
