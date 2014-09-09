@@ -3000,8 +3000,10 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
     // checked elsewhere. But it is still not allowed to repeat template default
     // argument in the same translation unit.
     if (RedundantDefaultArg) {
+#if 0 // Disable until Diag is rewired
       Diag(NewDefaultLoc, diag::err_template_param_default_arg_redefinition);
       Diag(OldDefaultLoc, diag::note_template_param_prev_default_arg);
+#endif
       Invalid = true;
     } else if (InconsistentDefaultArg) {
       // We could only diagnose about the case that the OldParam is imported.
