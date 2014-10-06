@@ -1524,6 +1524,15 @@ StringRef SourceManager::getBufferName(SourceLocation Loc,
   auto B = getBufferOrNone(getFileID(Loc));
   if (Invalid)
     *Invalid = !B;
+
+  // Try to get the name without reading the buffer.
+  FileID FID = getFileID(Loc);
+  const SrcMgr::SLocEntry &Entry = getSLocEntry(FID, Invalid);
+  if (!Invalid && Entry.isFile()) {
+    if (const FileEntry* FE = Entry.getFile().getContentCache().ContentsEntry)
+      return FE->getName();
+  }
+
   return B ? B->getBufferIdentifier() : "<invalid buffer>";
 }
 
