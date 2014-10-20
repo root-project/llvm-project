@@ -332,6 +332,7 @@ public:
   StringRef getName() const { return LastRef->getName(); }
 
   StringRef tryGetRealPathName() const { return RealPathName; }
+  bool isOpen() const { return (bool)File; }
   off_t getSize() const { return Size; }
   unsigned getUID() const { return UID; }
   const llvm::sys::fs::UniqueID &getUniqueID() const { return UniqueID; }
