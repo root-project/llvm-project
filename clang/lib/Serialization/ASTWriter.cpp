@@ -4519,6 +4519,9 @@ void ASTWriter::AddToken(const Token &Tok, RecordDataImpl &Record) {
     // is needed.
     AddIdentifierRef(Tok.getIdentifierInfo(), Record);
   }
+
+  if (Tok.isLiteral())
+    AddString(StringRef(Tok.getLiteralData(), Tok.getLength()), Record);
 }
 
 void ASTWriter::AddString(StringRef Str, RecordDataImpl &Record) {
