@@ -14066,6 +14066,26 @@ public:
         SavedPendingLocalImplicitInstantiations;
   };
 
+  class SavePendingInstantiationsRAII {
+  public:
+    SavePendingInstantiationsRAII(Sema &S)
+        : SavedPendingLocalImplicitInstantiations(S, /*AtEndOfTU=*/false),
+          S(S) {
+      SavedPendingInstantiations.swap(S.PendingInstantiations);
+    }
+
+    ~SavePendingInstantiationsRAII() {
+      assert(S.PendingInstantiations.empty() &&
+             "there shouldn't be any pending instantiations");
+      SavedPendingInstantiations.swap(S.PendingInstantiations);
+    }
+
+  private:
+    LocalEagerInstantiationScope SavedPendingLocalImplicitInstantiations;
+    Sema &S;
+    std::deque<PendingImplicitInstantiation> SavedPendingInstantiations;
+  };
+
   /// Records and restores the CurFPFeatures state on entry/exit of compound
   /// statements.
   class FPFeaturesStateRAII {
