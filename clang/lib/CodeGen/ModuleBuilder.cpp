@@ -34,7 +34,7 @@ namespace clang {
     ASTContext *Ctx;
     const HeaderSearchOptions &HeaderSearchOpts; // Only used for debug info.
     const PreprocessorOptions &PreprocessorOpts; // Only used for debug info.
-    const CodeGenOptions CodeGenOpts;  // Intentionally copied in.
+    CodeGenOptions CodeGenOpts;  // Intentionally copied in.
 
     unsigned HandlingTopLevelDecls;
 
@@ -124,6 +124,16 @@ namespace clang {
 
     llvm::Constant *GetAddrOfGlobal(GlobalDecl global, bool isForDefinition) {
       return Builder->GetAddrOfGlobal(global, ForDefinition_t(isForDefinition));
+    }
+
+    llvm::Module *StartModule(llvm::StringRef ModuleName,
+                              llvm::LLVMContext& C,
+                              const CodeGenOptions& CGO) {
+      assert(!M && "Replacing existing Module?");
+      CodeGenOpts = CGO;
+      M.reset(new llvm::Module(ModuleName, C));
+      Initialize(*Ctx);
+      return M.get();
     }
 
     void print(llvm::raw_ostream& out) {
@@ -465,6 +475,13 @@ llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
 
 void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
   static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
+}
+
+
+llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
+                                         llvm::LLVMContext& C,
+                                         const CodeGenOptions& CGO) {
+  return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C, CGO);
 }
 
 CodeGenerator *clang::CreateLLVMCodeGen(
