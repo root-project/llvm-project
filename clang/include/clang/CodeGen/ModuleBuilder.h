@@ -93,6 +93,9 @@ public:
   llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
 
   void forgetGlobal(llvm::GlobalValue* GV);
+  llvm::Module* StartModule(llvm::StringRef ModuleName,
+                            llvm::LLVMContext& C,
+                            const CodeGenOptions& CGO);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.
