@@ -31,6 +31,8 @@
 #include <optional>
 #include <stack>
 
+namespace cling { class ParserStateRAII; }
+
 namespace clang {
   class PragmaHandler;
   class Scope;
@@ -69,6 +71,7 @@ class Parser : public CodeCompletionHandler {
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
   friend class DestroyTemplateIdAnnotationsRAIIObj;
+  friend class ::cling::ParserStateRAII;
 
   Preprocessor &PP;
 
