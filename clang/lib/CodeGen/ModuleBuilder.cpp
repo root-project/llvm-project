@@ -130,9 +130,38 @@ namespace clang {
                               llvm::LLVMContext& C,
                               const CodeGenOptions& CGO) {
       assert(!M && "Replacing existing Module?");
+
+      std::unique_ptr<CodeGen::CodeGenModule> OldBuilder;
+      OldBuilder.swap(Builder);
       CodeGenOpts = CGO;
       M.reset(new llvm::Module(ModuleName, C));
       Initialize(*Ctx);
+
+      assert(OldBuilder->DeferredDeclsToEmit.empty()
+             && "Should have emitted all decls deferred to emit.");
+      assert(Builder->DeferredDecls.empty()
+             && "Newly created module should not have deferred decls");
+      Builder->DeferredDecls.swap(OldBuilder->DeferredDecls);
+
+      assert(Builder->DeferredVTables.empty()
+             && "Newly created module should not have deferred vtables");
+      Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
+
+      assert(Builder->MangledDeclNames.empty()
+             && "Newly created module should not have mangled decl names");
+      //Builder->MangledDeclNames.swap(OldBuilder->MangledDeclNames);
+
+      assert(Builder->Manglings.empty()
+             && "Newly created module should not have manglings");
+      // Calls swap() internally, *also* swapping the Allocator object which is
+      // essential to keep the storage!
+      Builder->Manglings = std::move(OldBuilder->Manglings);
+
+
+      assert(OldBuilder->WeakRefReferences.empty()
+             && "Not all WeakRefRefs have been applied");
+
+
       return M.get();
     }
 
