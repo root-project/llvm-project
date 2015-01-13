@@ -147,19 +147,15 @@ namespace clang {
              && "Newly created module should not have deferred vtables");
       Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
 
-      assert(Builder->MangledDeclNames.empty()
-             && "Newly created module should not have mangled decl names");
-      //Builder->MangledDeclNames.swap(OldBuilder->MangledDeclNames);
-
       assert(Builder->Manglings.empty()
              && "Newly created module should not have manglings");
       // Calls swap() internally, *also* swapping the Allocator object which is
       // essential to keep the storage!
       Builder->Manglings = std::move(OldBuilder->Manglings);
 
-
-      assert(OldBuilder->WeakRefReferences.empty()
-             && "Not all WeakRefRefs have been applied");
+      assert(Builder->WeakRefReferences.empty()
+             && "Newly created module should not have weakRefRefs");
+      Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
 
 
       return M.get();
