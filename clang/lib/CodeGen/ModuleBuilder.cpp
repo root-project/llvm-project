@@ -105,6 +105,11 @@ namespace clang {
     }
 
     std::unique_ptr<llvm::Module> ReleaseModule() {
+      // Remove pending etc decls in case of error; the asserts in StartModule()
+      // will rightfully be confused otherwise, as none of the decls were
+      // emitted.
+      if (Diags.hasErrorOccurred())
+        Builder->clear();
       return std::exchange(M, nullptr);
     }
 
