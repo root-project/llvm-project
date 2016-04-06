@@ -261,6 +261,16 @@ namespace clang {
       return M.get();
     }
 
+    void forgetGlobal(llvm::GlobalValue* GV) {
+      for (auto I = Builder->ConstantStringMap.begin(),
+            E = Builder->ConstantStringMap.end(); I != E; ++I) {
+        if (I->second == GV) {
+          Builder->ConstantStringMap.erase(I);
+          break;
+        }
+      }
+    }
+
     void Initialize(ASTContext &Context) override {
       Ctx = &Context;
 
@@ -475,6 +485,10 @@ void CodeGenerator::print(llvm::raw_ostream& out) {
 llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext &C) {
   return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C);
+}
+
+void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
 }
 
 CodeGenerator *
