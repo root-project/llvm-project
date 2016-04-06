@@ -17,6 +17,7 @@
 
 namespace llvm {
   class Constant;
+  class GlobalValue;
   class LLVMContext;
   class Module;
   class StringRef;
@@ -90,6 +91,8 @@ public:
   /// Create a new \c llvm::Module after calling HandleTranslationUnit. This
   /// enable codegen in interactive processing environments.
   llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
+
+  void forgetGlobal(llvm::GlobalValue* GV);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.
