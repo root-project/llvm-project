@@ -21,6 +21,7 @@ namespace llvm {
   class LLVMContext;
   class Module;
   class StringRef;
+  class raw_ostream;
 
   namespace vfs {
   class FileSystem;
@@ -92,6 +93,8 @@ public:
   ///   code generator will schedule the entity for emission if a
   ///   definition has been registered with this code generator.
   llvm::Constant *GetAddrOfGlobal(GlobalDecl decl, bool isForDefinition);
+
+  void print(llvm::raw_ostream& out);
 
   /// Create a new \c llvm::Module after calling HandleTranslationUnit. This
   /// enable codegen in interactive processing environments.
