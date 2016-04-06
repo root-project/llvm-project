@@ -19,6 +19,7 @@
 
 namespace llvm {
   class Constant;
+  class GlobalValue;
   class LLVMContext;
   class Module;
   class StringRef;
@@ -111,6 +112,8 @@ public:
 
   llvm::Module *StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C,
                             const CodeGenOptions &CGO);
+
+  void forgetGlobal(llvm::GlobalValue *GV);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.

@@ -155,6 +155,17 @@ namespace {
       return StartModule(ModuleName, C);
     }
 
+    void forgetGlobal(llvm::GlobalValue *GV) {
+      for (auto I = Builder->ConstantStringMap.begin(),
+                E = Builder->ConstantStringMap.end();
+           I != E; ++I) {
+        if (I->second == GV) {
+          Builder->ConstantStringMap.erase(I);
+          break;
+        }
+      }
+    }
+
     void Initialize(ASTContext &Context) override {
       Ctx = &Context;
 
@@ -378,6 +389,10 @@ llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          const CodeGenOptions &CGO) {
   return static_cast<CodeGeneratorImpl *>(this)->StartModule(ModuleName, C,
                                                              CGO);
+}
+
+void CodeGenerator::forgetGlobal(llvm::GlobalValue *GV) {
+  static_cast<CodeGeneratorImpl *>(this)->forgetGlobal(GV);
 }
 
 std::unique_ptr<CodeGenerator>
