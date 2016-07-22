@@ -1120,6 +1120,27 @@ public:
     }
   };
 
+  class DelayedInfoRAII {
+    Sema &S;
+    SmallVector<std::pair<const CXXMethodDecl*, const CXXMethodDecl*>, 2>
+      DelayedOverridingExceptionSpecChecks;
+    SmallVector<std::pair<FunctionDecl*, FunctionDecl*>, 2>
+      DelayedEquivalentExceptionSpecChecks;
+  public:
+    DelayedInfoRAII(Sema& S): S(S) {
+      std::swap(S.DelayedOverridingExceptionSpecChecks,
+                DelayedOverridingExceptionSpecChecks);
+      std::swap(S.DelayedEquivalentExceptionSpecChecks,
+                DelayedEquivalentExceptionSpecChecks);
+    }
+    ~DelayedInfoRAII() {
+      std::swap(S.DelayedOverridingExceptionSpecChecks,
+                DelayedOverridingExceptionSpecChecks);
+      std::swap(S.DelayedEquivalentExceptionSpecChecks,
+                DelayedEquivalentExceptionSpecChecks);
+    }
+  };
+
   /// WeakUndeclaredIdentifiers - Identifiers contained in \#pragma weak before
   /// declared. Rare. May alias another identifier, declared or undeclared.
   ///
