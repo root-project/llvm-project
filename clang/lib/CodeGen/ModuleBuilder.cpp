@@ -148,6 +148,9 @@ namespace clang {
              && "Newly created module should not have deferred decls");
       Builder->DeferredDecls.swap(OldBuilder->DeferredDecls);
 
+      assert(OldBuilder->EmittedDeferredDecls.empty()
+             && "Still have (unmerged) EmittedDeferredDecls deferred decls");
+
       assert(Builder->DeferredVTables.empty()
              && "Newly created module should not have deferred vtables");
       Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
@@ -161,7 +164,6 @@ namespace clang {
       assert(Builder->WeakRefReferences.empty()
              && "Newly created module should not have weakRefRefs");
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
-
 
       return M.get();
     }
@@ -295,6 +297,11 @@ namespace clang {
           break;
         }
       }
+    }
+
+    void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName) {
+      Builder->DeferredDecls.erase(MangledName);
+      Builder->Manglings.erase(MangledName);
     }
 
     void Initialize(ASTContext &Context) override {
@@ -507,6 +514,10 @@ void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
   static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
 }
 
+void CodeGenerator::forgetDecl(const GlobalDecl& GD,
+                               llvm::StringRef MangledName) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(GD, MangledName);
+}
 
 llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext& C,
