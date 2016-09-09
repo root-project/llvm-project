@@ -148,6 +148,9 @@ namespace clang {
              && "Newly created module should not have deferred decls");
       Builder->DeferredDecls.swap(OldBuilder->DeferredDecls);
 
+      assert(OldBuilder->EmittedDeferredDecls.empty()
+             && "Still have (unmerged) EmittedDeferredDecls deferred decls");
+
       assert(Builder->DeferredVTables.empty()
              && "Newly created module should not have deferred vtables");
       Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
@@ -161,7 +164,6 @@ namespace clang {
       assert(Builder->WeakRefReferences.empty()
              && "Newly created module should not have weakRefRefs");
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
-
 
       return M.get();
     }
@@ -295,6 +297,11 @@ namespace clang {
           break;
         }
       }
+    }
+
+    void forgetDecl(const GlobalDecl& GD) {
+      StringRef MangledName = Builder->getMangledName(GD);
+      Builder->DeferredDecls.erase(MangledName);
     }
 
     void Initialize(ASTContext &Context) override {
