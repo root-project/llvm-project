@@ -132,8 +132,14 @@ static void printIntegral(const TemplateArgument &TemplArg, raw_ostream &Out,
     } else
       Out << "(" << T->getCanonicalTypeInternal().getAsString(Policy) << ")"
           << Val;
-  } else
+  } else {
     Out << Val;
+    // Handle cases where the value is too large to fit into the underlying type
+    // i.e. where the unsignedness matters.
+    if (T->isBuiltinType())
+      if (Val.isUnsigned() && Val.getBitWidth() == 64 && Val.countLeadingOnes())
+        Out << "ull";
+  }
 }
 
 static unsigned getArrayDepth(QualType type) {
