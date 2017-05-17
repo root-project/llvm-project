@@ -349,7 +349,7 @@ Optional<FileEntryRef> HeaderSearch::getFileAndSuggestModule(
     bool OpenFile /*= true*/, bool CacheFailures /*= true*/) {
   // If we have a module map that might map this header, load it and
   // check whether we'll have a suggestion for a module.
-  auto File = getFileMgr().getFile(FileName, OpenFile, CacheFailures);
+  auto File = getFileMgr().getFileRef(FileName, OpenFile, CacheFailures);
   if (!File) {
     // For rare, surprising errors (e.g. "out of file handles"), diag the EC
     // message.
