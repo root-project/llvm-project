@@ -9906,7 +9906,7 @@ Expected<FileID> ASTImporter::Import(FileID FromID, bool IsBuiltin) {
       // FIXME: We want to re-use the existing MemoryBuffer!
       std::optional<llvm::MemoryBufferRef> FromBuf =
           Cache->getBufferOrNone(FromContext.getDiagnostics(),
-                                 FromSM.getFileManager(), SourceLocation{});
+                                 FromFileManager, SourceLocation{});
       if (!FromBuf)
         return llvm::make_error<ASTImportError>(ASTImportError::Unknown);
 
