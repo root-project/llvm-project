@@ -11344,8 +11344,8 @@ public:
   bool CheckTemplateParameterList(TemplateParameterList *NewParams,
                                   TemplateParameterList *OldParams,
                                   TemplateParamListContext TPC,
-                                  SkipBodyInfo *SkipBody = nullptr);
-
+                                  SkipBodyInfo *SkipBody = nullptr,
+                                  bool Complain = true);
   /// Match the given template parameter lists to the given scope
   /// specifier, returning the template parameter list that applies to the
   /// name.
