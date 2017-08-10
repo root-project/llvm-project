@@ -8394,7 +8394,8 @@ public:
   bool CheckTemplateParameterList(TemplateParameterList *NewParams,
                                   TemplateParameterList *OldParams,
                                   TemplateParamListContext TPC,
-                                  SkipBodyInfo *SkipBody = nullptr);
+                                  SkipBodyInfo *SkipBody = nullptr,
+                                  bool Complain = true);
   TemplateParameterList *MatchTemplateParametersToScopeSpecifier(
       SourceLocation DeclStartLoc, SourceLocation DeclLoc,
       const CXXScopeSpec &SS, TemplateIdAnnotation *TemplateId,
