@@ -1783,6 +1783,12 @@ static void SetNestedNameSpecifier(Sema &S, TagDecl *T,
   if (SS.isSet())
     T->setQualifierInfo(SS.getWithLocInContext(S.Context));
 }
+static bool IsRootAutoloadDeclTemplate(ClassTemplateDecl *D) {
+  for (TagDecl *TD = D->getTemplatedDecl(); TD; TD = TD->getPreviousDecl())
+    if (auto AnnotAttr = TD->getAttr<AnnotateAttr>())
+      return AnnotAttr->getAnnotation().starts_with("$clingAutoload$");
+  return false;
+}
 
 // Returns the template parameter list with all default template argument
 // information.
@@ -2069,6 +2075,20 @@ DeclResult Sema::CheckClassTemplate(
     return true;
   }
 
+  // AXEL - do not check for redecls of template arg defaults when parsing
+  // dictionary forward decls.
+  bool fwdDeclFromROOT = false;
+  for (const auto &A : Attr) {
+    if (A.getKind() != ParsedAttr::AT_Annotate)
+      continue;
+    if (A.getNumArgs() > 0 && A.isArgExpr(0))
+      if (auto AnnotVal = dyn_cast<StringLiteral>(A.getArgAsExpr(0)))
+        if (AnnotVal->getString().starts_with("$clingAutoload$"))
+          fwdDeclFromROOT = true;
+  }
+  if (!fwdDeclFromROOT && PrevClassTemplate)
+    fwdDeclFromROOT = IsRootAutoloadDeclTemplate(PrevClassTemplate);
+
   // Check the template parameter list of this declaration, possibly
   // merging in the template parameter list from the previous class
   // template declaration. Skip this check for a friend in a dependent
@@ -2083,7 +2103,7 @@ DeclResult Sema::CheckClassTemplate(
               ? TPC_ClassTemplateMember
           : TUK == TagUseKind::Friend ? TPC_FriendClassTemplate
                                       : TPC_Other,
-          SkipBody))
+          SkipBody, /*Complain*/!fwdDeclFromROOT))
     Invalid = true;
 
   if (SS.isSet()) {
@@ -2315,7 +2335,8 @@ static bool DiagnoseUnexpandedParameterPacks(Sema &S,
 bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
                                       TemplateParameterList *OldParams,
                                       TemplateParamListContext TPC,
-                                      SkipBodyInfo *SkipBody) {
+                                      SkipBodyInfo *SkipBody,
+                                      bool Complain /*true*/) {
   bool Invalid = false;
 
   // C++ [temp.param]p10:
@@ -2357,7 +2378,7 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
     if (TemplateTypeParmDecl *NewTypeParm
           = dyn_cast<TemplateTypeParmDecl>(*NewParam)) {
       // Check the presence of a default argument here.
-      if (NewTypeParm->hasDefaultArgument() &&
+      if (Complain && NewTypeParm->hasDefaultArgument() &&
           DiagnoseDefaultTemplateArgument(
               *this, TPC, NewTypeParm->getLocation(),
               NewTypeParm->getDefaultArgument().getSourceRange()))
@@ -2411,7 +2432,7 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
       }
 
       // Check the presence of a default argument here.
-      if (NewNonTypeParm->hasDefaultArgument() &&
+      if (Complain && NewNonTypeParm->hasDefaultArgument() &&
           DiagnoseDefaultTemplateArgument(
               *this, TPC, NewNonTypeParm->getLocation(),
               NewNonTypeParm->getDefaultArgument().getSourceRange())) {
@@ -2462,7 +2483,7 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
       }
 
       // Check the presence of a default argument here.
-      if (NewTemplateParm->hasDefaultArgument() &&
+      if (Complain && NewTemplateParm->hasDefaultArgument() &&
           DiagnoseDefaultTemplateArgument(*this, TPC,
                                           NewTemplateParm->getLocation(),
                      NewTemplateParm->getDefaultArgument().getSourceRange()))
@@ -2537,13 +2558,13 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
     // argument to be repeated across translation unit. Note that the ODR is
     // checked elsewhere. But it is still not allowed to repeat template default
     // argument in the same translation unit.
-    if (RedundantDefaultArg) {
+    if (Complain && RedundantDefaultArg) {
 #if 0 // Disable until Diag is rewired
       Diag(NewDefaultLoc, diag::err_template_param_default_arg_redefinition);
       Diag(OldDefaultLoc, diag::note_template_param_prev_default_arg);
 #endif
       Invalid = true;
-    } else if (InconsistentDefaultArg) {
+    } else if (Complain && InconsistentDefaultArg) {
       // We could only diagnose about the case that the OldParam is imported.
       // The case NewParam is imported should be handled in ASTReader.
       Diag(NewDefaultLoc,
@@ -2552,7 +2573,7 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
            diag::note_template_param_prev_default_arg_in_other_module)
           << PrevModuleName;
       Invalid = true;
-    } else if (MissingDefaultArg &&
+    } else if (Complain && MissingDefaultArg &&
                (TPC == TPC_Other || TPC == TPC_TemplateTemplateParameterPack ||
                 TPC == TPC_FriendClassTemplate)) {
       // C++ 23[temp.param]p14:
