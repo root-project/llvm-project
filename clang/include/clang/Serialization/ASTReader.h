@@ -1398,6 +1398,12 @@ private:
         : Mod(Mod), ImportedBy(ImportedBy), ImportLoc(ImportLoc) {}
   };
 
+  uint32_t getGenerationOrNull() const {
+    if (ContextObj)
+      return getGeneration(*ContextObj);
+    return 0u;
+  }
+
   ASTReadResult ReadASTCore(StringRef FileName, ModuleKind Type,
                             SourceLocation ImportLoc, ModuleFile *ImportedBy,
                             SmallVectorImpl<ImportedModule> &Loaded,
