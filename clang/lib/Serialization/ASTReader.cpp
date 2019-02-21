@@ -2871,6 +2871,27 @@ ASTReader::ReadControlBlock(ModuleFile &F,
         else
           SkipPath(Record, Idx);
 
+        // Check if ImportedFile exists on disk
+        if (!llvm::sys::fs::is_directory(ImportedFile)) {
+          StringRef ModuleName = llvm::sys::path::filename(ImportedFile.c_str());
+          ModuleName.consume_back(".pcm");
+          // Get clang::Module pointer by looking up the module name
+          HeaderSearch &HS = PP.getHeaderSearchInfo();
+          Module *M = HS.lookupModule(ModuleName, SourceLocation(),
+                                      /*AllowSearch*/ true,
+                                      /*AllowExtraModuleMapSearch*/ true);
+          if (M) {
+            std::string Path = HS.getPrebuiltModuleFileName(M->Name);
+                           if (Path.empty())
+              Path = HS.getCachedModuleFileName(M->Name,
+                   HS.getModuleMap().getModuleMapFileForUniquing(M)->getName());
+            // FIXME: Add a hash comparison to check if ImportedFile's hash and the
+            // new Modules Path's hash matches or not.
+            if (!Path.empty())
+              ImportedFile = Path;
+          }
+        }
+
         // If our client can't cope with us being out of date, we can't cope with
         // our dependency being missing.
         unsigned Capabilities = ClientLoadCapabilities;
@@ -3892,11 +3913,31 @@ void ASTReader::ReadModuleOffsetMap(ModuleFile &F) const {
                           ? ModuleMgr.lookupByModuleName(Name)
                           : ModuleMgr.lookupByFileName(Name));
     if (!OM) {
-      std::string Msg =
-          "SourceLocation remap refers to unknown module, cannot find ";
-      Msg.append(std::string(Name));
-      Error(Msg);
-      return;
+      StringRef ModuleName = llvm::sys::path::filename(Name);
+      ModuleName.consume_back(".pcm");
+      HeaderSearch &HS = PP.getHeaderSearchInfo();
+      Module *M = HS.lookupModule(ModuleName, SourceLocation(),
+                                  /*AllowSearch*/ true,
+                                  /*AllowExtraModuleMapSearch*/ true);
+      std::string Path;
+      // If module definition exists in modulemap, search the modulepath in HeaderSearchInfo
+      if (M) {
+        Path = HS.getPrebuiltModuleFileName(M->Name);
+        if (Path.empty())
+          Path = HS.getCachedModuleFileName(M->Name,
+                   HS.getModuleMap().getModuleMapFileForUniquing(M)->getName());
+
+      }
+
+      StringRef NewName = StringRef(Path);
+      OM = ModuleMgr.lookupByFileName(NewName);
+      if (!OM) {
+        std::string Msg =
+           "SourceLocation remap refers to unknown module, cannot find ";
+        Msg.append(std::string(NewName));
+        Error(Msg);
+        return;
+      }
     }
 
     SourceLocation::UIntTy SLocOffset =
