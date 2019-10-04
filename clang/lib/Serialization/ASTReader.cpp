@@ -2350,8 +2350,12 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
 
   // For an overridden file, create a virtual file with the stored
   // size/timestamp.
-  if ((Overridden || Transient) && !File)
+  bool DisableValidation = bool(PP.getPreprocessorOpts().DisablePCHOrModuleValidation &
+                                DisableValidationForModuleKind::All);
+  if ((Overridden || Transient) && (!File || DisableValidation)) {
     File = FileMgr.getVirtualFileRef(Filename, StoredSize, StoredTime);
+    Overridden = true;
+  }
 
   if (!File) {
     if (Complain) {
