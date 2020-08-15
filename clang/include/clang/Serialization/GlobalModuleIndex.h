@@ -16,11 +16,13 @@
 #define LLVM_CLANG_SERIALIZATION_GLOBALMODULEINDEX_H
 
 #include "llvm/ADT/DenseMap.h"
+#include <llvm/ADT/DenseSet.h>
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/ADT/StringSet.h"
 #include <memory>
 #include <utility>
 
@@ -31,6 +33,7 @@ class MemoryBuffer;
 
 namespace clang {
 
+class FileEntry;
 class FileManager;
 class IdentifierIterator;
 class PCHContainerOperations;
@@ -39,6 +42,12 @@ class PCHContainerReader;
 namespace serialization {
   class ModuleFile;
 }
+
+using llvm::SmallVector;
+using llvm::SmallVectorImpl;
+using llvm::StringRef;
+using llvm::StringSet;
+using serialization::ModuleFile;
 
 /// A global index for a set of module files, providing information about
 /// the identifiers within those module files.
@@ -52,8 +61,6 @@ namespace serialization {
 /// imported, and can be queried to determine which modules the current
 /// translation could or should load to fix a problem.
 class GlobalModuleIndex {
-  using ModuleFile = serialization::ModuleFile;
-
   /// Buffer containing the index file, which is lazily accessed so long
   /// as the global module index is live.
   std::unique_ptr<llvm::MemoryBuffer> Buffer;
@@ -119,6 +126,9 @@ class GlobalModuleIndex {
   GlobalModuleIndex &operator=(const GlobalModuleIndex &) = delete;
 
 public:
+  using UserDefinedInterestingIDs =
+    llvm::StringMap<llvm::SmallVector<const FileEntry*, 2>>;
+
   ~GlobalModuleIndex();
 
   /// Read a global index file for the given directory.
@@ -140,7 +150,9 @@ public:
   ///
   /// \param ModuleFiles Will be populated with the set of module files that
   /// have been indexed.
-  void getKnownModules(llvm::SmallVectorImpl<ModuleFile *> &ModuleFiles);
+  void getKnownModules(SmallVectorImpl<ModuleFile *> &ModuleFiles);
+
+  void getKnownModuleFileNames(StringSet<> &ModuleFiles);
 
   /// Retrieve the set of module files on which the given module file
   /// directly depends.
@@ -161,6 +173,9 @@ public:
   /// \returns true if the identifier is known to the index, false otherwise.
   bool lookupIdentifier(llvm::StringRef Name, HitSet &Hits);
 
+  typedef llvm::SmallDenseSet<llvm::StringRef, 4> FileNameHitSet;
+  bool lookupIdentifier(StringRef Name, FileNameHitSet &Hits);
+
   /// Note that the given module file has been loaded.
   ///
   /// \returns false if the global module index has information about this
@@ -180,9 +195,11 @@ public:
   /// creating modules.
   /// \param Path The path to the directory containing module files, into
   /// which the global index will be written.
+  /// \param Optionally pass already precomputed interesting identifiers.
   static llvm::Error writeIndex(FileManager &FileMgr,
                                 const PCHContainerReader &PCHContainerRdr,
-                                llvm::StringRef Path);
+                                StringRef Path,
+                              UserDefinedInterestingIDs *ExternalIDs = nullptr);
 };
 }
 
