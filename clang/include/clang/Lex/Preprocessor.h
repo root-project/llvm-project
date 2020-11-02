@@ -1391,6 +1391,7 @@ public:
     TokenLexer* SavedCurTokenLexer;
     const DirectoryLookup *SavedCurDirLookup;
     enum CurLexerKind SavedCurLexerKind;
+    unsigned SavedLexLevel;
 
   public:
     CleanupAndRestoreCacheRAII(Preprocessor &PP)
@@ -1401,7 +1402,8 @@ public:
         SavedCurPPLexer(PP.CurPPLexer),
         SavedCurTokenLexer(PP.CurTokenLexer.release()),
         SavedCurDirLookup(PP.CurDirLookup),
-        SavedCurLexerKind(PP.CurLexerKind)
+        SavedCurLexerKind(PP.CurLexerKind),
+        SavedLexLevel(PP.LexLevel)
     {
       PP.CachedLexPos = 0;
       PP.CachedTokens.clear();
@@ -1411,6 +1413,7 @@ public:
       PP.CurTokenLexer.reset(0);
       PP.CurDirLookup = 0;
       PP.CurLexerKind = CLK_CachingLexer;
+      PP.LexLevel = 0;
     }
 
     void pop() {
@@ -1426,6 +1429,7 @@ public:
       PP.CurTokenLexer.reset(SavedCurTokenLexer);
       PP.CurDirLookup = SavedCurDirLookup;
       PP.CurLexerKind = SavedCurLexerKind;
+      PP.LexLevel = SavedLexLevel;
 
       SavedCachedLexPos = 0;
       SavedCachedTokens.clear();
@@ -1435,6 +1439,7 @@ public:
       SavedCurTokenLexer = 0;
       SavedCurDirLookup = 0;
       SavedCurLexerKind = (enum CurLexerKind)~0U;
+      SavedLexLevel = ~0U;
     }
 
     ~CleanupAndRestoreCacheRAII() {
