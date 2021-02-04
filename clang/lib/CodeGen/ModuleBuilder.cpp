@@ -312,6 +312,7 @@ namespace clang {
 
     void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName) {
       Builder->DeferredDecls.erase(MangledName);
+      Builder->Manglings.erase(MangledName);
     }
 
     void Initialize(ASTContext &Context) override {
