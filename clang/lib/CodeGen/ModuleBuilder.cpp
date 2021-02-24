@@ -175,6 +175,7 @@ namespace clang {
       Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
 
       ((CXXABICtxSwapper&)*Builder->ABI).SwapCtx(*OldBuilder->ABI);
+      Builder->TBAA.swap(OldBuilder->TBAA);
 
       return M.get();
     }
