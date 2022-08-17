@@ -594,3 +594,35 @@ void test() {
 }
 
 } // namespace special_ctor
+
+// https://github.com/llvm/llvm-project/issues/55601
+namespace issue_55601 {
+template<typename T>
+class Bar {
+  consteval static T x() { return 5; }  // expected-note {{non-constexpr constructor 'derp' cannot be used in a constant expression}}
+ public:
+  Bar() : a(x()) {} // expected-error {{call to consteval function 'issue_55601::Bar<issue_55601::derp>::x' is not a constant expression}}
+                    // expected-error@-1 {{call to consteval function 'issue_55601::derp::operator int' is not a constant expression}}
+                    // expected-note@-2 {{in call to 'x()'}}
+                    // expected-note@-3 {{non-literal type 'issue_55601::derp' cannot be used in a constant expression}}
+ private:
+  int a;
+};
+Bar<int> f;
+Bar<float> g;
+
+struct derp {
+  // Can't be used in a constant expression
+  derp(int); // expected-note {{declared here}}
+  consteval operator int() const { return 5; }
+};
+Bar<derp> a; // expected-note {{in instantiation of member function 'issue_55601::Bar<issue_55601::derp>::Bar' requested here}}
+
+struct constantDerp {
+  // Can be used in a constant expression.
+  consteval constantDerp(int) {} 
+  consteval operator int() const { return 5; }
+};
+Bar<constantDerp> b;
+
+} // namespace issue_55601
