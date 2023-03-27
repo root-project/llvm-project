@@ -124,9 +124,14 @@ struct ModuleAttributes {
   LLVM_PREFERRED_TYPE(bool)
   unsigned NoUndeclaredIncludes : 1;
 
+  /// Whether files in this module can only include non-modular headers
+  /// and headers from used modules.
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned IsOptional : 1;
+
   ModuleAttributes()
       : IsSystem(false), IsExternC(false), IsExhaustive(false),
-        NoUndeclaredIncludes(false) {}
+        NoUndeclaredIncludes(false), IsOptional(false) {}
 };
 
 /// Required to construct a Module.
@@ -427,6 +432,9 @@ public:
   /// and headers from used modules.
   LLVM_PREFERRED_TYPE(bool)
   unsigned NoUndeclaredIncludes : 1;
+
+  /// Whether the submodule is allowed to have missing headers.
+  unsigned IsOptional : 1;
 
   /// Whether this module came from a "private" module map, found next
   /// to a regular (public) module map.
