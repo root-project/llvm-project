@@ -312,6 +312,8 @@ void ModuleMap::resolveHeader(Module *Mod,
     // this was supposed to modularize the builtin header alone.
   } else if (Header.Kind == Module::HK_Excluded) {
     // Ignore missing excluded header files. They're optional anyway.
+  } else if (Mod->IsOptional) {
+    // Optional submodules can have missing headers.
   } else {
     // If we find a module that has a missing header, we mark this module as
     // unavailable and store the header directive for displaying diagnostics.
@@ -1112,6 +1114,7 @@ Module *ModuleMap::inferFrameworkModule(DirectoryEntryRef FrameworkDir,
   Result->IsExternC |= Attrs.IsExternC;
   Result->ConfigMacrosExhaustive |= Attrs.IsExhaustive;
   Result->NoUndeclaredIncludes |= Attrs.NoUndeclaredIncludes;
+  Result->IsOptional |= Attrs.IsOptional;
   Result->Directory = FrameworkDir;
 
   // Chop off the first framework bit, as that is implied.
@@ -1778,6 +1781,8 @@ void ModuleMapLoader::handleModuleDecl(const modulemap::ModuleDecl &MD) {
     ActiveModule->IsExternC = true;
   if (MD.Attrs.NoUndeclaredIncludes)
     ActiveModule->NoUndeclaredIncludes = true;
+  if (MD.Attrs.IsOptional)
+    ActiveModule->IsOptional = true;
   ActiveModule->Directory = Directory;
 
   StringRef MapFileName(
