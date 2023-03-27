@@ -1094,7 +1094,10 @@ bool ModuleMapFileParser::parseOptionalAttributes(ModuleAttributes &Attrs) {
       AT_exhaustive,
 
       /// The 'no_undeclared_includes' attribute.
-      AT_no_undeclared_includes
+      AT_no_undeclared_includes,
+
+      /// The 'optional' attribute.
+      AT_optional
     };
 
     // Decode the attribute name.
@@ -1103,6 +1106,7 @@ bool ModuleMapFileParser::parseOptionalAttributes(ModuleAttributes &Attrs) {
             .Case("exhaustive", AT_exhaustive)
             .Case("extern_c", AT_extern_c)
             .Case("no_undeclared_includes", AT_no_undeclared_includes)
+            .Case("optional", AT_optional)
             .Case("system", AT_system)
             .Default(AT_unknown);
     switch (Attribute) {
@@ -1125,6 +1129,10 @@ bool ModuleMapFileParser::parseOptionalAttributes(ModuleAttributes &Attrs) {
 
     case AT_no_undeclared_includes:
       Attrs.NoUndeclaredIncludes = true;
+      break;
+
+    case AT_optional:
+      Attrs.IsOptional = true;
       break;
     }
     consumeToken();
