@@ -283,6 +283,11 @@ namespace clang {
       }
     }
 
+    void forgetDecl(llvm::StringRef MangledName) {
+      Builder->DeferredDecls.erase(MangledName);
+      Builder->Manglings.erase(MangledName);
+    }
+
     void Initialize(ASTContext &Context) override {
       Ctx = &Context;
 
@@ -507,6 +512,10 @@ llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
 
 void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
   static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
+}
+
+void CodeGenerator::forgetDecl(llvm::StringRef MangledName) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(MangledName);
 }
 
 CodeGenerator *
