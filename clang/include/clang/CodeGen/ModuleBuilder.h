@@ -117,6 +117,7 @@ public:
                             const CodeGenOptions &CGO);
 
   void forgetGlobal(llvm::GlobalValue *GV);
+  void forgetDecl(llvm::StringRef MangledName);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.
