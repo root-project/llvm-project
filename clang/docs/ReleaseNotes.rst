@@ -714,6 +714,10 @@ Improvements to Clang's diagnostics
 
 Bug Fixes in This Version
 -------------------------
+- Fixed an issue where a class template specialization whose declaration is
+  instantiated in one module and whose definition is instantiated in another
+  module may end up with members associated with the wrong declaration of the
+  class, which can result in miscompiles in some cases.
 
 - Fix crash when attempting to perform parenthesized initialization of an
   aggregate with a base class with only non-public constructors.
