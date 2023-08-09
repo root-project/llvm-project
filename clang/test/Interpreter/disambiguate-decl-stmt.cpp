@@ -34,6 +34,10 @@ struct Dtor1 {~Dtor1();};
 Dtor1::~Dtor1() { printf("Dtor1\n"); }
 Dtor1 d1;
 
+struct Dtor2 { ~Dtor2(); };
+::Dtor2::~Dtor2() { printf("Dtor2\n"); }
+Dtor2 d2;
+
 // Ctors
 
 // Deduction guide
