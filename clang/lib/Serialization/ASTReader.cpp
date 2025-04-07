@@ -7707,14 +7707,8 @@ void ASTReader::CompleteRedeclChain(const Decl *D) {
     }
   }
 
-  if (Template) {
-    // For partitial specialization, load all the specializations for safety.
-    if (isa<ClassTemplatePartialSpecializationDecl,
-            VarTemplatePartialSpecializationDecl>(D))
-      Template->loadLazySpecializationsImpl();
-    else
-      Template->loadLazySpecializationsImpl(Args);
-  }
+  if (Template)
+    Template->loadLazySpecializationsImpl(Args);
 }
 
 CXXCtorInitializer **
