@@ -257,6 +257,15 @@ ABI Changes in This Version
 AST Dumping Potentially Breaking Changes
 ----------------------------------------
 
+- Pretty-printing of atomic builtins ``__atomic_test_and_set`` and ``__atomic_clear`` in ``-ast-print`` output.
+  These previously displayed an extra ``<null expr>`` argument, e.g.:
+
+    ``__atomic_test_and_set(p, <null expr>, 0)``
+
+  Now they are printed as:
+
+    ``__atomic_test_and_set(p, 0)``
+
 Clang Frontend Potentially Breaking Changes
 -------------------------------------------
 
